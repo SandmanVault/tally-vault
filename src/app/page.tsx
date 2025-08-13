@@ -1,7 +1,26 @@
 import Image from "next/image"
 import Link from "next/link"
+import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 
-export default function Landing() {
+export default async function Landing({
+  searchParams,
+}: {
+  searchParams: Promise<{ admin?: string }>
+}) {
+  const token = process.env.ADMIN_BYPASS_TOKEN
+
+  // Bounce to /admin to set cookie if ?admin=TOKEN is passed
+  const sp = await searchParams
+  if (token && sp?.admin === token) {
+    redirect(`/admin?token=${encodeURIComponent(token)}`)
+  }
+
+  // If cookie already set, skip landing
+  const jar = await cookies()
+  const cookie = jar.get("tv_admin")?.value
+  if (token && cookie === token) redirect("/app")
+
   return (
     <main className="relative">
       <section className="container-tight py-16 md:py-24">
@@ -11,9 +30,7 @@ export default function Landing() {
               <span className="h-2 w-2 rounded-full bg-primary"></span>
               <span className="text-sm">Loved by collectors</span>
             </div>
-            <h1 className="h1">
-              Your full <span className="text-primary">action figure</span> collection in the palm of your hand.
-            </h1>
+            <h1 className="h1">Your full <span className="text-primary">action figure</span> collection in the palm of your hand.</h1>
             <p className="mt-4 text-lg text-muted-foreground">
               Track real value, stop duplicate buys, and hunt the figures you want—with live prices.
             </p>
